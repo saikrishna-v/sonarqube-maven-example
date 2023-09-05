@@ -1,0 +1,28 @@
+kind: pipeline
+type: kubernetes
+name: sonar-maven-example
+
+globals:
+  - &SONAR
+    SECURITY_URL:
+      from_secret: SECURITY_URL
+    SECURITY_TOKEN:
+      from_secret: SECURITY_TOKEN
+
+trigger:
+  event:
+    - push
+  branch:
+    include:
+    - master
+
+clone:
+  depth: 10
+
+steps:
+- name: sonar-build
+  image: us-docker.pkg.dev/infoworksprod/infoworks-builds-repository/infoworks-maven:latest
+  environment:
+    <<: *SONAR
+  commands:
+    - mvn clean install cobertura:cobertura sonar:sonar -Dcobertura.aggregate=true -Dcobertura.report.format=xml -Dsonar.projectName=testing-maven-sonar -Dsonar.host.url=$SECURITY_URL -Dsonar.login=$SECURITY_TOKEN
